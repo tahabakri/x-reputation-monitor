@@ -1,0 +1,19 @@
+# Copy to .dev.vars for local runs (wrangler dev). .dev.vars is git-ignored.
+# In production these are set with `wrangler secret put NAME` -- never put real values in this file.
+
+X_BEARER_TOKEN=replace-me
+
+# Your brand, handles and keywords as ONE line of JSON (see monitor.config.example.json).
+# In production: wrangler secret put MONITOR_CONFIG  (fed from your git-ignored monitor.config.json).
+MONITOR_CONFIG='{"brandName":"ExampleCo","brandTerms":["ExampleCo","@ExampleCo"],"ownAccounts":["ExampleCo"]}'
+
+# LARK_MODE=webhook (default) needs only these:
+LARK_WEBHOOK_URL=https://open.larksuite.com/open-apis/bot/v2/hook/replace-me
+# Only if "Signature verification" is turned on for the custom bot:
+LARK_WEBHOOK_SECRET=
+
+# LARK_MODE=app (status buttons + who-updated) also needs:
+LARK_APP_ID=
+LARK_APP_SECRET=
+LARK_CHAT_ID=
+LARK_VERIFICATION_TOKEN=

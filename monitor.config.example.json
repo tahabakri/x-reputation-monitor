@@ -1,0 +1,12 @@
+{
+  "brandName": "ExampleCo",
+  "brandTerms": ["ExampleCo", "@ExampleCo", "@ExampleCoHelp"],
+  "ownAccounts": ["ExampleCo", "ExampleCoHelp"],
+  "keywords": {
+    "legal": ["lawsuit", "SEC", "regulator", "police", "sanctions", "MiCa"],
+    "scam": ["scam", "fraud", "stolen", "hacked", "avoid"],
+    "funds": ["frozen", "locked", "not received", "missing", "stuck"],
+    "support": ["no reply", "no response"]
+  },
+  "caseSensitive": ["SEC"]
+}

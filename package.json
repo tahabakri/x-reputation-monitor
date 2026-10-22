@@ -1,0 +1,22 @@
+{
+  "name": "x-reputation-monitor",
+  "version": "0.1.0",
+  "private": true,
+  "license": "MIT",
+  "type": "module",
+  "description": "Read-only X (Twitter) negative-mention monitor that posts alerts to a Lark group. Runs on a Cloudflare Worker cron.",
+  "scripts": {
+    "dev": "wrangler dev --test-scheduled",
+    "deploy": "wrangler deploy",
+    "types": "wrangler types --strict-vars=false",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "mock": "node scripts/mock-servers.mjs"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.5",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.5",
+    "wrangler": "^4.151.3"
+  }
+}

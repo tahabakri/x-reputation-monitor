@@ -1,0 +1,32 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "x-reputation-monitor",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-10-22",
+  "compatibility_flags": ["nodejs_compat"],
+
+  // One check every 5 minutes. The Free plan allows 5 cron triggers per account; this uses 1.
+  "triggers": { "crons": ["*/5 * * * *"] },
+
+  // D1 holds the cursor (newest X post already handled), the cases, and the alert state.
+  // No ids here: `wrangler deploy` creates the database on first deploy.
+  "d1_databases": [{ "binding": "DB", "database_name": "x-reputation-monitor" }],
+
+  "observability": { "enabled": true, "head_sampling_rate": 1 },
+
+  // Non-secret settings only. Secrets (X token, Lark webhook / app credentials) are set with
+  // `wrangler secret put` and never live in this file. See README.md.
+  "vars": {
+    // "webhook" = post alert cards through a Lark custom-bot webhook (no status buttons).
+    // "app"     = post through a Lark app, with status buttons that record who clicked.
+    "LARK_MODE": "webhook",
+    "X_API_BASE": "https://api.x.com",
+    "LARK_API_BASE": "https://open.larksuite.com",
+    // On the very first run (no cursor yet) only look back this far, so we never pull 7 days of backlog.
+    "FIRST_RUN_LOOKBACK_MINUTES": "30",
+    // Warn in Lark when the X credit balance drops below this many USD. Empty disables the check.
+    "LOW_CREDIT_USD": "10",
+    // One "monitor is alive" message per day at this UTC hour. Empty disables it.
+    "HEARTBEAT_HOUR_UTC": "6"
+  }
+}
