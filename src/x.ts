@@ -45,6 +45,10 @@ interface XSearchBody {
 
 const TIMEOUT_MS = 10_000;
 
+// X sends & < > as HTML entities; show them as typed.
+export const decodeEntities = (t: string): string =>
+  t.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, '&');
+
 export function classifyFailure(status: number, bodyText: string): XFailure {
   let detail = bodyText;
   try {
@@ -121,7 +125,7 @@ export async function searchRecent(a: SearchArgs): Promise<SearchResult> {
       const author = p.author_id ? users.get(p.author_id) : undefined;
       posts.push({
         id: p.id,
-        text: p.text ?? '',
+        text: decodeEntities(p.text ?? ''),
         createdAt: p.created_at ?? new Date().toISOString(),
         username: author?.username ?? 'unknown',
         followers: author?.followers ?? 0,

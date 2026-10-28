@@ -86,12 +86,12 @@ The Worker refuses to run (and spends nothing on X) until `MONITOR_CONFIG` is se
 
 ## Switch on status buttons (app mode)
 
-1. Lark developer console: create a custom app, enable **Bot**, grant `im:message:send_as_bot`, add the bot to the alert group.
-2. Copy the **App ID**, **App Secret** and **Verification Token**. Leave **Encrypt Key empty** (encrypted callbacks are
-   refused). Get the group's chat id (`oc_...`).
-3. Callback URL: `https://x-reputation-monitor.<your-subdomain>.workers.dev/lark/callback` (the deploy output prints it).
-   Subscribe to the card action callback (`card.action.trigger`). Lark sends a one-time challenge when you save it; the Worker answers it.
-4. Set the secrets, flip the mode, publish the Lark app version, redeploy:
+Do the steps in this order: the Worker only answers Lark's callback check once the secrets are set and the mode is `app`.
+
+1. Lark developer console: create a custom app, enable **Bot**, grant `im:message:send_as_bot` (and `im:chat:readonly` to look up the chat id), publish a version, and add the bot to the alert group.
+2. Copy the **App ID** and **App Secret** (Credentials & Basic Info) and the **Verification Token** (Events & Callbacks > Encryption Strategy). Leave **Encrypt Key** empty (encrypted callbacks are refused).
+3. Get the group's chat id (`oc_...`): with a tenant token for the app, `GET https://open.larksuite.com/open-apis/im/v1/chats` lists the groups the bot is in.
+4. Set the secrets, flip the mode, redeploy:
    ```bash
    npx wrangler secret put LARK_APP_ID
    npx wrangler secret put LARK_APP_SECRET
@@ -100,6 +100,8 @@ The Worker refuses to run (and spends nothing on X) until `MONITOR_CONFIG` is se
    # in wrangler.jsonc change  "LARK_MODE": "app"  then:
    npx wrangler deploy
    ```
+5. Only now: Events & Callbacks > Callback Configuration, send callbacks to the developer's server:
+   `https://x-reputation-monitor.<your-subdomain>.workers.dev/lark/callback` (the deploy output prints it). Add the card action callback (`card.action.trigger`). Lark sends a one-time challenge when you save it; the Worker answers it. Publish the app version again.
 
 ## When things go wrong (it tells Lark)
 

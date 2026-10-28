@@ -120,3 +120,10 @@ describe('priority and suggested action', () => {
     expect(suggestedAction('funds', 'P3')).toBe('Reply');
   });
 });
+
+describe('X text', () => {
+  it('shows HTML entities as typed', async () => {
+    const { decodeEntities } = await import('../src/x');
+    expect(decodeEntities('Q&amp;A &lt;3 &amp;lt; it&#39;s')).toBe("Q&A <3 &lt; it's");
+  });
+});
