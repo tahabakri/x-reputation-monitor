@@ -12,10 +12,16 @@ function keywordRegex(keyword: string, caseSensitive: boolean): RegExp {
 }
 
 // Labels a post with one of the plan's keyword categories. First match wins (legal > scam > funds > support).
-export function makeClassifier(m: MonitorConfig): { categorize(text: string): Category } {
+export function makeClassifier(m: MonitorConfig): { categorize(text: string): Category; mentionsBrand(text: string): boolean } {
   const sensitive = new Set(m.caseSensitive);
   const matchers = CATEGORY_ORDER.map((c) => [c, m.keywords[c].map((k) => keywordRegex(k, sensitive.has(k)))] as const);
+  // X also matches the brand in the author's handle and in link targets. A real mention has it in the text.
+  const brands = m.brandTerms.map((t) => t.replace(/^@/, '').toLowerCase());
   return {
+    mentionsBrand(text) {
+      const lower = text.toLowerCase();
+      return brands.some((b) => lower.includes(b));
+    },
     categorize(text) {
       for (const [category, regexes] of matchers) {
         if (regexes.some((re) => re.test(text))) return category;

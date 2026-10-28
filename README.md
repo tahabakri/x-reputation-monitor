@@ -50,6 +50,7 @@ cp monitor.config.example.json monitor.config.json   # git-ignored; edit it
 | `brandName` | Shown in warnings, e.g. "ExampleCo mentions are NOT being checked" |
 | `brandTerms` | A post must contain one of these (words or `@handles`) |
 | `ownAccounts` | Your own handles: their posts never alert (also excluded in the X query) |
+| `ignoreAccounts` | Optional. More handles to skip, e.g. affiliates or fan accounts. Filtered after the pull, so they do not use up query length (but are still billed) |
 | `keywords` | Optional. Lists per category `legal`, `scam`, `funds`, `support`. Missing categories use generic defaults. |
 | `caseSensitive` | Optional. Keywords that only count in this exact casing when labelling (default `["SEC"]`, since "5 sec" means seconds) |
 
@@ -122,6 +123,7 @@ real cases after a couple of weeks. After editing, `npm test` then `npx wrangler
 (vars or bindings), run `npm run types`.
 
 Known trade-offs:
+- X also matches the brand in an author's handle and in link targets. A post only alerts if the brand and a keyword are in its visible text; the rest are dropped after the pull (and still billed).
 - The promo filter runs after the pull, so a real user writing "my airdrop is stuck" is dropped, and the post is still billed.
 - `SEC` is also how people write "seconds". X search is case-insensitive so such posts are still pulled (and billed);
   only an upper-case `SEC` is labelled legal.

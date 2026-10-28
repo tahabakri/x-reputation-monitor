@@ -2,6 +2,7 @@
   "brandName": "ExampleCo",
   "brandTerms": ["ExampleCo", "@ExampleCo", "@ExampleCoHelp"],
   "ownAccounts": ["ExampleCo", "ExampleCoHelp"],
+  "ignoreAccounts": [],
   "keywords": {
     "legal": ["lawsuit", "SEC", "regulator", "police", "sanctions", "MiCa"],
     "scam": ["scam", "fraud", "stolen", "hacked", "avoid"],

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { getMeta } from '../src/db';
 import { runMonitor } from '../src/monitor';
-import { appEnv, testEnv, World } from './helpers';
+import { appEnv, TEST_MONITOR, testEnv, World } from './helpers';
 
 const T0 = Date.UTC(2026, 9, 22, 14, 0, 0);
 
@@ -64,6 +64,31 @@ describe('a normal cycle', () => {
     expect(summary.promoDropped).toBe(1);
     expect(world.cards()).toHaveLength(1);
     expect(await getMeta(env.DB, 'cursor')).toBe('3003');
+  });
+
+  it('drops posts X matched on the author handle or a link, not on the visible text', async () => {
+    const { env, world, run } = setup();
+    world.posts = [
+      { id: '3203', text: 'Daily market news: BTC back above 80k https://t.co/abc', user: 'ExampleCo_Fans' }, // brand only in the handle
+      { id: '3202', text: 'ExampleCo is great, see you at the event', user: 'dave' }, // brand, but no complaint word
+      { id: '3201', text: 'Is this bot actually neutral? https://t.co/xyz', user: 'erin' }, // neither in the text
+    ];
+    const summary = await run();
+    expect(summary.alerts).toBe(0);
+    expect(summary.irrelevantDropped).toBe(3);
+    expect(await getMeta(env.DB, 'cursor')).toBe('3203');
+  });
+
+  it('skips ignoreAccounts (affiliates) after the pull, without lengthening the X query', async () => {
+    const env = testEnv({ MONITOR_CONFIG: JSON.stringify({ ...TEST_MONITOR, ignoreAccounts: ['@ExampleCo_Fans'] }) });
+    const { world, run } = setup(env);
+    world.posts = [
+      { id: '3302', text: 'ExampleCo giveaway ended, nothing stuck here', user: 'ExampleCo_Fans' },
+      { id: '3301', text: 'ExampleCo withdrawal stuck', user: 'frank' },
+    ];
+    const summary = await run();
+    expect(summary.alerts).toBe(1);
+    expect(world.searchCalls[0]!.searchParams.get('query')).not.toContain('ExampleCo_Fans');
   });
 
   it('orders post ids as 64-bit numbers, not text (999.. is older than 1000..)', async () => {

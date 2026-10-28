@@ -19,7 +19,8 @@ export const CATEGORY_LABEL: Record<Category, string> = {
 export interface MonitorConfig {
   brandName: string; // shown in warnings: "<brand> mentions are NOT being checked"
   brandTerms: string[]; // words / @handles that must appear in a post, e.g. "ExampleCo", "@ExampleCo"
-  ownAccounts: string[]; // handles whose own posts are never alerted on
+  ownAccounts: string[]; // handles whose own posts are never alerted on (also excluded in the X query)
+  ignoreAccounts: string[]; // more handles to skip after the pull, e.g. affiliates; costs no query length
   keywords: Record<KeywordCategory, string[]>; // a post must contain at least one of these
   caseSensitive: string[]; // keywords that only count in exactly this casing when labelling
 }
@@ -70,6 +71,11 @@ export function parseMonitorConfig(raw: string | undefined): MonitorConfig {
       ? []
       : stringList(o.ownAccounts, 'ownAccounts', 0, (s) => HANDLE.test(s)).map((s) => s.replace(/^@/, ''));
 
+  const ignoreAccounts =
+    o.ignoreAccounts === undefined
+      ? []
+      : stringList(o.ignoreAccounts, 'ignoreAccounts', 0, (s) => HANDLE.test(s)).map((s) => s.replace(/^@/, ''));
+
   const kw = (o.keywords ?? {}) as Record<string, unknown>;
   const keywords = {} as Record<KeywordCategory, string[]>;
   for (const c of CATEGORY_ORDER) {
@@ -81,7 +87,7 @@ export function parseMonitorConfig(raw: string | undefined): MonitorConfig {
   const caseSensitive =
     o.caseSensitive === undefined ? DEFAULT_CASE_SENSITIVE : stringList(o.caseSensitive, 'caseSensitive', 0, (s) => TERM.test(s));
 
-  return { brandName, brandTerms, ownAccounts, keywords, caseSensitive };
+  return { brandName, brandTerms, ownAccounts, ignoreAccounts, keywords, caseSensitive };
 }
 
 // Obvious promo noise is dropped after the pull (referral codes, airdrop, giveaway, signal-group

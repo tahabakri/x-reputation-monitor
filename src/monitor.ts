@@ -22,6 +22,7 @@ export const defaultDeps = (): Deps => ({
 export interface RunSummary {
   alerts: number;
   promoDropped: number;
+  irrelevantDropped: number;
   duplicates: number;
   overflow: number;
   truncated: boolean;
@@ -63,6 +64,7 @@ export async function runMonitor(env: Env, deps: Deps = defaultDeps()): Promise<
   const summary: RunSummary = {
     alerts: 0,
     promoDropped: 0,
+    irrelevantDropped: 0,
     duplicates: 0,
     overflow: 0,
     truncated: false,
@@ -70,8 +72,8 @@ export async function runMonitor(env: Env, deps: Deps = defaultDeps()): Promise<
     larkFailed: false,
   };
 
-  const own = new Set(cfg.monitor.ownAccounts.map((a) => a.toLowerCase()));
-  const { categorize } = makeClassifier(cfg.monitor);
+  const own = new Set([...cfg.monitor.ownAccounts, ...cfg.monitor.ignoreAccounts].map((a) => a.toLowerCase()));
+  const { categorize, mentionsBrand } = makeClassifier(cfg.monitor);
   const cursor = await getMeta(db, 'cursor');
   const query = buildQuery(cfg.monitor);
   const result = await searchRecent({
@@ -108,6 +110,13 @@ export async function runMonitor(env: Env, deps: Deps = defaultDeps()): Promise<
       handled = p.id;
       continue;
     }
+    // X matched on something other than the visible text (author handle, link target): not a complaint.
+    const category = categorize(p.text);
+    if (!mentionsBrand(p.text) || category === 'other') {
+      summary.irrelevantDropped++;
+      handled = p.id;
+      continue;
+    }
     if (await caseExists(db, p.id)) {
       summary.duplicates++;
       handled = p.id;
@@ -117,7 +126,7 @@ export async function runMonitor(env: Env, deps: Deps = defaultDeps()): Promise<
       overflow++;
       continue;
     }
-    const c = makeCase(p, now, categorize(p.text));
+    const c = makeCase(p, now, category);
     try {
       await sender.sendCard(c);
     } catch (err) {
