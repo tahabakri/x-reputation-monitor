@@ -105,7 +105,7 @@ export const PROMO_PATTERNS: readonly RegExp[] = [
 
 // Repeats: after one alert, the same account is not alerted again for this long, and the same text
 // (links, hashtags and case ignored) is not alerted again from any account for this long.
-export const REPEAT_AUTHOR_MS = 6 * 3_600_000;
+export const REPEAT_AUTHOR_MS = 3 * 3_600_000;
 export const REPEAT_TEXT_MS = 24 * 3_600_000;
 
 // Priority rules. These are starting guesses to be reviewed with real cases after two weeks.
