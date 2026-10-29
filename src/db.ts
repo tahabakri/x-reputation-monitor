@@ -143,3 +143,16 @@ export async function countOpenCases(db: D1Database): Promise<number> {
     .first<{ n: number }>();
   return row?.n ?? 0;
 }
+
+// Alerts sent recently, loaded once per run so repeats can be spotted without a query per post.
+export async function recentCases(
+  db: D1Database,
+  sinceMs: number,
+  limit = 500,
+): Promise<Array<{ username: string; text: string; at: number }>> {
+  const { results } = await db
+    .prepare('SELECT username, text, created_at FROM cases WHERE created_at >= ? ORDER BY created_at DESC LIMIT ?')
+    .bind(sinceMs, limit)
+    .all<{ username: string; text: string; created_at: number }>();
+  return results.map((r) => ({ username: r.username, text: r.text, at: r.created_at }));
+}

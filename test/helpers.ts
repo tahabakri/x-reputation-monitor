@@ -87,7 +87,7 @@ export interface TestPost {
 export function searchBody(posts: TestPost[]) {
   const users = new Map<string, { id: string; username: string; public_metrics: { followers_count: number } }>();
   for (const p of posts) {
-    const username = p.user ?? 'alice';
+    const username = p.user ?? `user${p.id}`;
     users.set(username, { id: `u_${username}`, username, public_metrics: { followers_count: p.followers ?? 100 } });
   }
   const newest = posts.reduce<string | null>((m, p) => (m === null || BigInt(p.id) > BigInt(m) ? p.id : m), null);
@@ -96,7 +96,7 @@ export function searchBody(posts: TestPost[]) {
       id: p.id,
       text: p.text,
       created_at: '2026-10-22T13:58:00.000Z',
-      author_id: `u_${p.user ?? 'alice'}`,
+      author_id: `u_${p.user ?? `user${p.id}`}`,
       public_metrics: { like_count: p.likes ?? 0, retweet_count: p.reposts ?? 0 },
     })),
     includes: { users: [...users.values()] },

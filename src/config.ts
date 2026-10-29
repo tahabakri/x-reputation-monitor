@@ -96,8 +96,17 @@ export const PROMO_PATTERNS: readonly RegExp[] = [
   /\b(referral|referrals|invite code|promo code|use my code|my code|ref code)\b/i,
   /\bair-?drops?\b/i,
   /\bgive-?aways?\b/i,
+  // "recovery" scams that reply to victims with a DM bait
+  /\b(if you(?:'|’)?re|if you are) a victim\b[^.]{0,60}\b(dm|message|contact)\b/i,
+  /\b(fund|crypto|asset|bitcoin) recovery\b/i,
+  /\brecover(?:y of)? (?:your|lost|stolen) (?:funds|crypto|bitcoin|assets)\b/i,
   /\b(signals? (group|channel)|vip signals?|free signals?|join (my|our) (telegram|channel|group))\b/i,
 ];
+
+// Repeats: after one alert, the same account is not alerted again for this long, and the same text
+// (links, hashtags and case ignored) is not alerted again from any account for this long.
+export const REPEAT_AUTHOR_MS = 6 * 3_600_000;
+export const REPEAT_TEXT_MS = 24 * 3_600_000;
 
 // Priority rules. These are starting guesses to be reviewed with real cases after two weeks.
 //   P1: legal/regulatory, or a scam allegation / any complaint with high reach.

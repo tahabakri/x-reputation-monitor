@@ -91,6 +91,29 @@ describe('a normal cycle', () => {
     expect(world.searchCalls[0]!.searchParams.get('query')).not.toContain('ExampleCo_Fans');
   });
 
+  it('alerts once for a templated campaign: same account again, or same text from other accounts', async () => {
+    const { world, run } = setup();
+    world.posts = [
+      { id: '3406', text: 'ExampleCo #Scam warning: verify the domain first https://t.co/ddd', user: 'gina' }, // same text, 3rd account
+      { id: '3405', text: '#ExampleCo #Scam warning: verify the domain first https://t.co/aaa', user: 'carol' }, // same account as 3404
+      { id: '3404', text: '#ExampleCo #Scam help: file complaints with the FBI https://t.co/bbb', user: 'carol' },
+      { id: '3403', text: '#ExampleCo #Scam warning: Verify the domain first! https://t.co/ccc', user: 'dave' },
+      { id: '3402', text: 'ExampleCo withdrawal stuck for 3 days', user: 'erin' }, // a different, real complaint
+    ];
+    const summary = await run();
+    expect(summary.alerts).toBe(3); // erin, dave, carol (first post)
+    expect(summary.repeatsDropped).toBe(2); // carol again, gina
+    expect(world.cards()).toHaveLength(3);
+  });
+
+  it('drops "recovery scam" bait as promo noise', async () => {
+    const { world, run } = setup();
+    world.posts = [{ id: '3501', text: 'ExampleCo scam. If you are a victim of this platform send a DM', user: 'frank' }];
+    const summary = await run();
+    expect(summary.alerts).toBe(0);
+    expect(summary.promoDropped).toBe(1);
+  });
+
   it('orders post ids as 64-bit numbers, not text (999.. is older than 1000..)', async () => {
     const { env, world, run } = setup();
     world.posts = [

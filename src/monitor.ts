@@ -1,11 +1,12 @@
 import { maybeCheckCredits, maybeHeartbeat, onXFailure, onXSuccess } from './alerts';
 import type { Case } from './cases';
 import { isPromoNoise, makeClassifier, priorityFor, suggestedAction } from './classify';
-import { MAX_ALERTS_PER_RUN, MAX_PAGES_PER_RUN, type Category } from './config';
-import { caseExists, ensureSchema, getMeta, insertCase, setMeta } from './db';
+import { MAX_ALERTS_PER_RUN, MAX_PAGES_PER_RUN, REPEAT_TEXT_MS, type Category } from './config';
+import { caseExists, ensureSchema, getMeta, insertCase, recentCases, setMeta } from './db';
 import { readConfig } from './env';
 import { makeSender } from './lark';
 import { buildQuery } from './query';
+import { makeRepeatFilter } from './repeats';
 import { compareIds } from './util';
 import { searchRecent, type Candidate, type XFailure } from './x';
 
@@ -23,6 +24,7 @@ export interface RunSummary {
   alerts: number;
   promoDropped: number;
   irrelevantDropped: number;
+  repeatsDropped: number;
   duplicates: number;
   overflow: number;
   truncated: boolean;
@@ -65,6 +67,7 @@ export async function runMonitor(env: Env, deps: Deps = defaultDeps()): Promise<
     alerts: 0,
     promoDropped: 0,
     irrelevantDropped: 0,
+    repeatsDropped: 0,
     duplicates: 0,
     overflow: 0,
     truncated: false,
@@ -74,6 +77,7 @@ export async function runMonitor(env: Env, deps: Deps = defaultDeps()): Promise<
 
   const own = new Set([...cfg.monitor.ownAccounts, ...cfg.monitor.ignoreAccounts].map((a) => a.toLowerCase()));
   const { categorize, mentionsBrand } = makeClassifier(cfg.monitor);
+  const repeats = makeRepeatFilter(await recentCases(db, now - REPEAT_TEXT_MS), now, cfg.monitor.brandTerms);
   const cursor = await getMeta(db, 'cursor');
   const query = buildQuery(cfg.monitor);
   const result = await searchRecent({
@@ -122,6 +126,11 @@ export async function runMonitor(env: Env, deps: Deps = defaultDeps()): Promise<
       handled = p.id;
       continue;
     }
+    if (repeats.isRepeat(p.username, p.text)) {
+      summary.repeatsDropped++;
+      handled = p.id;
+      continue;
+    }
     if (summary.alerts >= MAX_ALERTS_PER_RUN) {
       overflow++;
       continue;
@@ -135,6 +144,7 @@ export async function runMonitor(env: Env, deps: Deps = defaultDeps()): Promise<
       break; // keep the cursor before this post; the next run retries it
     }
     await insertCase(db, c);
+    repeats.remember(p.username, p.text);
     summary.alerts++;
     handled = p.id;
   }

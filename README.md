@@ -129,7 +129,7 @@ Known trade-offs:
 - The promo filter runs after the pull, so a real user writing "my airdrop is stuck" is dropped, and the post is still billed.
 - `SEC` is also how people write "seconds". X search is case-insensitive so such posts are still pulled (and billed);
   only an upper-case `SEC` is labelled legal.
-- Alerts are de-duplicated by post id only, not by author or topic.
+- Alerts are de-duplicated by post id, and spam campaigns are thinned: after one alert the same account is not alerted again for 6 hours, and the same text (links, hashtags and case ignored) is not alerted again from any account for 24 hours (`REPEAT_*` in `src/config.ts`). A real user who posts two different complaints within 6 hours only gets the first one alerted.
 
 ## Local checks (no keys, no spend)
 
