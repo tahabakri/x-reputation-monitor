@@ -32,7 +32,7 @@ reposts), the post text, a link, post time (UTC) and a suggested action.
 | `LARK_MODE` | What you get | What you need |
 |---|---|---|
 | `webhook` (default) | Alert cards. A button opens the post on X. **No status tracking.** | Lark custom-bot webhook URL |
-| `app` | Cards with **Reply / Ignore / Escalate / Legal review** and **Replied / Waiting / Closed** buttons. The card shows **who** set each status and when, plus a short history. Ignore also closes the case. | A small Lark app (App ID, App Secret, Verification Token, group chat id) |
+| `app` | Cards with **Reply / Ignore / Escalate / Legal review / Spam** and **Replied / Waiting / Closed** buttons. The card shows **who** set each status and when, plus a short history. Ignore also closes the case. | A small Lark app (App ID, App Secret, Verification Token, group chat id) |
 
 Lark custom-bot webhooks cannot receive button clicks, so "who updated it" needs `app` mode.
 Start in `webhook` mode to prove the pipeline, then switch.
@@ -124,7 +124,14 @@ P1/P2/P3 thresholds, alert limits. The priority and suggested-action rules are s
 real cases after a couple of weeks. After editing, `npm test` then `npx wrangler deploy`. If you change `wrangler.jsonc`
 (vars or bindings), run `npm run types`.
 
+**Spam button:** closes the case and blocks that account: its later posts never alert. Blocking is by account and permanent until you remove it:
+```bash
+npx wrangler d1 execute x-reputation-monitor --remote --command "DELETE FROM blocked_accounts WHERE username = 'someaccount'"
+npx wrangler d1 execute x-reputation-monitor --remote --command "SELECT * FROM blocked_accounts"   # list them
+```
+
 Known trade-offs:
+- A keyword straight after "never / not / no / n't" (or one linking word: "not been hacked", "isn't a scam") is read as the opposite of a complaint and does not count. "not good scam" still counts.
 - X also matches the brand in an author's handle and in link targets. A post only alerts if the brand and a keyword are in its visible text; the rest are dropped after the pull (and still billed).
 - The promo filter runs after the pull, so a real user writing "my airdrop is stuck" is dropped, and the post is still billed.
 - `SEC` is also how people write "seconds". X search is case-insensitive so such posts are still pulled (and billed);

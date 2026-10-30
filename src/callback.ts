@@ -1,6 +1,6 @@
 import { buildAppCard } from './card';
 import { applyUpdate, isAction, isStatus } from './cases';
-import { getCase, saveCaseState } from './db';
+import { blockAccount, getCase, saveCaseState } from './db';
 import { safeEqual } from './util';
 
 const MAX_BODY = 64 * 1024;
@@ -71,8 +71,9 @@ export async function handleLarkCallback(request: Request, env: Env, now = Date.
   if (!next) return json({ toast: { type: 'info', content: 'Already set' } });
 
   await saveCaseState(env.DB, next);
+  if (value.v === 'Spam') await blockAccount(env.DB, next.username, by, now);
   return json({
-    toast: { type: 'success', content: `Marked ${value.v}` },
+    toast: { type: 'success', content: value.v === 'Spam' ? `Blocked @${next.username}` : `Marked ${value.v}` },
     card: { type: 'raw', data: buildAppCard(next) },
   });
 }

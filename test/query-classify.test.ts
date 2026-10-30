@@ -66,6 +66,10 @@ describe('categorize', () => {
     ['funds NOT   received after 5 days ExampleCo', 'funds'],
     ['ExampleCo no response from support', 'support'],
     ['ExampleCo is a scam', 'scam'],
+    ['ExampleCo not good scam', 'scam'],
+    ['ExampleCo not good, scam', 'scam'],
+    ['not sure if ExampleCo is a scam', 'scam'],
+    ['ExampleCo no scam here', 'other'],
     ['avoid ExampleCo', 'scam'],
     ['filing a lawsuit against ExampleCo', 'legal'],
     ['ExampleCo and MiCa compliance', 'legal'],
@@ -134,6 +138,10 @@ describe('negated keywords and affiliate pitches', () => {
     ['my partner @ExampleCo hasn\'t been hacked', 'other'],
     ['ExampleCo is not a scam', 'other'],
     ['ExampleCo is a scam', 'scam'],
+    ['ExampleCo not good scam', 'scam'],
+    ['ExampleCo not good, scam', 'scam'],
+    ['not sure if ExampleCo is a scam', 'scam'],
+    ['ExampleCo no scam here', 'other'],
     ['Binance was hacked, ExampleCo has never been hacked', 'scam'], // another, un-negated mention remains
     ['I can\'t believe ExampleCo withdrawal is frozen', 'funds'],
   ])('%s -> %s', (text, expected) => expect(categorize(text)).toBe(expected));

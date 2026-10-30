@@ -2,7 +2,7 @@ import { maybeCheckCredits, maybeHeartbeat, onXFailure, onXSuccess } from './ale
 import type { Case } from './cases';
 import { isPromoNoise, makeClassifier, priorityFor, suggestedAction } from './classify';
 import { MAX_ALERTS_PER_RUN, MAX_PAGES_PER_RUN, REPEAT_TEXT_MS, type Category } from './config';
-import { caseExists, ensureSchema, getMeta, insertCase, recentCases, setMeta } from './db';
+import { blockedAccounts, caseExists, ensureSchema, getMeta, insertCase, recentCases, setMeta } from './db';
 import { readConfig } from './env';
 import { makeSender } from './lark';
 import { buildQuery } from './query';
@@ -75,7 +75,7 @@ export async function runMonitor(env: Env, deps: Deps = defaultDeps()): Promise<
     larkFailed: false,
   };
 
-  const own = new Set([...cfg.monitor.ownAccounts, ...cfg.monitor.ignoreAccounts].map((a) => a.toLowerCase()));
+  const own = new Set([...cfg.monitor.ownAccounts, ...cfg.monitor.ignoreAccounts, ...(await blockedAccounts(db))].map((a) => a.toLowerCase()));
   const { categorize, mentionsBrand } = makeClassifier(cfg.monitor);
   const repeats = makeRepeatFilter(await recentCases(db, now - REPEAT_TEXT_MS), now, cfg.monitor.brandTerms);
   const cursor = await getMeta(db, 'cursor');

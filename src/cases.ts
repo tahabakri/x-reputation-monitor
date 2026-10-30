@@ -4,7 +4,7 @@ import type { Category } from './config';
 export const STATUSES = ['New', 'Replied', 'Waiting', 'Closed'] as const;
 export type Status = (typeof STATUSES)[number];
 
-export const ACTIONS = ['Reply', 'Ignore', 'Escalate', 'Legal review'] as const;
+export const ACTIONS = ['Reply', 'Ignore', 'Escalate', 'Legal review', 'Spam'] as const;
 
 export interface HistoryEntry {
   by: string; // Lark open_id of the person who clicked
@@ -36,7 +36,7 @@ export const isAction = (v: unknown): v is Action => ACTIONS.includes(v as Actio
 const HISTORY_LIMIT = 8;
 
 // A person clicked a button. Returns the updated case, or null if nothing would change.
-// "Ignore" also closes the case, as in the plan ("Mark ignored in Lark").
+// "Ignore" and "Spam" also close the case, as in the plan ("Mark ignored in Lark").
 export function applyUpdate(c: Case, field: 'status' | 'action', value: string, by: string, now: number): Case | null {
   const next: Case = { ...c, history: [...c.history] };
   if (field === 'status') {
@@ -47,7 +47,7 @@ export function applyUpdate(c: Case, field: 'status' | 'action', value: string, 
     if (!isAction(value) || value === c.action) return null;
     next.action = value;
     next.history.push({ by, at: now, field, to: value });
-    if (value === 'Ignore' && c.status !== 'Closed') {
+    if ((value === 'Ignore' || value === 'Spam') && c.status !== 'Closed') {
       next.status = 'Closed';
       next.history.push({ by, at: now, field: 'status', to: 'Closed' });
     }

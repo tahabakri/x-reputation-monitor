@@ -63,6 +63,14 @@ function buttonRow(c: Case, field: 'status' | 'action', values: readonly string[
           type: v === current ? 'primary_filled' : 'default',
           size: 'small',
           behaviors: [{ type: 'callback', value: { c: c.id, k: field, v } }],
+          ...(v === 'Spam'
+            ? {
+                confirm: {
+                  title: { tag: 'plain_text', content: 'Mark as spam?' },
+                  text: { tag: 'plain_text', content: `Closes this case and stops all future alerts from @${c.username}.` },
+                },
+              }
+            : {}),
         },
       ],
     })),

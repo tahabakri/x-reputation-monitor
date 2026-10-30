@@ -1,7 +1,7 @@
 import { CATEGORY_ORDER, PRIORITY, PROMO_HANDLE, PROMO_PATTERNS, type Category, type MonitorConfig } from './config';
 
 export type Priority = 'P1' | 'P2' | 'P3';
-export type Action = 'Reply' | 'Ignore' | 'Escalate' | 'Legal review';
+export type Action = 'Reply' | 'Ignore' | 'Escalate' | 'Legal review' | 'Spam';
 
 const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
@@ -11,8 +11,10 @@ function keywordRegex(keyword: string, caseSensitive: boolean): RegExp {
   return new RegExp(`(?<![\\p{L}\\p{N}_])${body}(?![\\p{L}\\p{N}_])`, caseSensitive ? 'gu' : 'giu');
 }
 
-// "never been hacked", "isn't a scam", "hasn't been frozen": the keyword is there but the post says the opposite.
-const NEGATED = /(?:\b(?:never|not|no|without)|n['’]t|\bcannot)\s+(?:[\p{L}\p{N}'’]+\s+)?$/iu;
+// "never been hacked", "isn't a scam", "hasn't been frozen": the keyword is there but the post says the
+// opposite. Only a negation straight before the keyword counts, or one with a small linking word between
+// ("not been", "not a"). "Bitunix not good scam" or "not sure if scam" is still a complaint.
+const NEGATED = /(?:\b(?:never|not|no|without)|n['’]t|\bcannot)\s+(?:(?:been|be|being|a|an|the|any|got|get|getting)\s+)?$/iu;
 
 // True when the keyword appears at least once without a negation right before it.
 function hasPositiveMatch(re: RegExp, text: string): boolean {

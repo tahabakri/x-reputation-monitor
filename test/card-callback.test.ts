@@ -72,7 +72,7 @@ describe('card content', () => {
     };
     walk(buildAppCard(baseCase));
     expect(buttons.map((b) => b.text.content)).toEqual([
-      'Reply', 'Ignore', 'Escalate', 'Legal review', 'Replied', 'Waiting', 'Closed',
+      'Reply', 'Ignore', 'Escalate', 'Legal review', 'Spam', 'Replied', 'Waiting', 'Closed',
     ]);
     expect(buttons[0].behaviors[0]).toEqual({ type: 'callback', value: { c: '123', k: 'action', v: 'Reply' } });
   });
@@ -136,6 +136,21 @@ describe('card button callback', () => {
     const stored = await getCase(env.DB, '9001');
     expect(stored?.status).toBe('Replied');
     expect(stored?.history[0]?.by).toBe('ou_sara1');
+  });
+
+  it('Spam closes the case and blocks the account from later alerts', async () => {
+    const env = await seededApp();
+    const world = new World();
+    const res = await handleLarkCallback(click('verify-me', { c: '9001', k: 'action', v: 'Spam' }), env, NOW + 1000);
+    expect(((await res.json()) as any).toast.content).toMatch(/^Blocked @/);
+    expect((await getCase(env.DB, '9001'))?.status).toBe('Closed');
+
+    const later = await runMonitor(env, { fetchFn: world.fetch, now: () => NOW + 3_600_000 });
+    expect(later.alerts).toBe(0);
+    world.posts = [{ id: '9002', text: 'ExampleCo scam again', user: 'user9001' }];
+    expect((await runMonitor(env, { fetchFn: world.fetch, now: () => NOW + 7_200_000 })).alerts).toBe(0);
+    world.posts = [{ id: '9003', text: 'ExampleCo scam again', user: 'someone_else' }];
+    expect((await runMonitor(env, { fetchFn: world.fetch, now: () => NOW + 10_800_000 })).alerts).toBe(1);
   });
 
   it('rejects a wrong or missing verification token and changes nothing', async () => {

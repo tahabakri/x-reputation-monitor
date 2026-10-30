@@ -20,6 +20,7 @@ const SCHEMA = [
     history TEXT NOT NULL DEFAULT '[]'
   )`,
   `CREATE INDEX IF NOT EXISTS cases_created ON cases (created_at)`,
+  `CREATE TABLE IF NOT EXISTS blocked_accounts (username TEXT PRIMARY KEY, blocked_by TEXT NOT NULL, blocked_at INTEGER NOT NULL)`,
   `CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT NOT NULL)`,
 ];
 
@@ -155,4 +156,17 @@ export async function recentCases(
     .bind(sinceMs, limit)
     .all<{ username: string; text: string; created_at: number }>();
   return results.map((r) => ({ username: r.username, text: r.text, at: r.created_at }));
+}
+
+// Accounts someone marked as spam with the Spam button. Compared in lower case.
+export async function blockedAccounts(db: D1Database): Promise<Set<string>> {
+  const { results } = await db.prepare('SELECT username FROM blocked_accounts').all<{ username: string }>();
+  return new Set(results.map((r) => r.username));
+}
+
+export async function blockAccount(db: D1Database, username: string, by: string, now: number): Promise<void> {
+  await db
+    .prepare('INSERT OR IGNORE INTO blocked_accounts (username, blocked_by, blocked_at) VALUES (?, ?, ?)')
+    .bind(username.toLowerCase(), by, now)
+    .run();
 }
