@@ -92,7 +92,14 @@ export function parseMonitorConfig(raw: string | undefined): MonitorConfig {
 
 // Obvious promo noise is dropped after the pull (referral codes, airdrop, giveaway, signal-group
 // spam). Trade-off: a real user writing "my airdrop is stuck" is dropped too.
+// Accounts whose handle says they sell "recovery": these reply to victims with a DM bait.
+export const PROMO_HANDLE = /recover/i;
+
 export const PROMO_PATTERNS: readonly RegExp[] = [
+  // affiliate pitches that use a competitor's trouble to sell sign-ups
+  /\b(new user|welcome|sign-?up) (rewards?|bonus(es)?|offer)\b/i,
+  /\b(use|click) my (link|code)\b/i,
+  /\bgood time to (move|switch)( over)?\b/i,
   /\b(referral|referrals|invite code|promo code|use my code|my code|ref code)\b/i,
   /\bair-?drops?\b/i,
   /\bgive-?aways?\b/i,

@@ -127,3 +127,24 @@ describe('X text', () => {
     expect(decodeEntities('Q&amp;A &lt;3 &amp;lt; it&#39;s')).toBe("Q&A <3 &lt; it's");
   });
 });
+
+describe('negated keywords and affiliate pitches', () => {
+  it.each([
+    ['ExampleCo has never been hacked', 'other'],
+    ['my partner @ExampleCo hasn\'t been hacked', 'other'],
+    ['ExampleCo is not a scam', 'other'],
+    ['ExampleCo is a scam', 'scam'],
+    ['Binance was hacked, ExampleCo has never been hacked', 'scam'], // another, un-negated mention remains
+    ['I can\'t believe ExampleCo withdrawal is frozen', 'funds'],
+  ])('%s -> %s', (text, expected) => expect(categorize(text)).toBe(expected));
+
+  it.each([
+    'Could be a good time to move over to ExampleCo. NEW user rewards: https://t.co/x',
+    'use my link for a sign-up bonus on ExampleCo',
+  ])('drops pitch: %s', (text) => expect(isPromoNoise(text)).toBe(true));
+
+  it('drops accounts that sell "recovery"', () => {
+    expect(isPromoNoise('ExampleCo freeze warning', 'RecoverwithErik')).toBe(true);
+    expect(isPromoNoise('ExampleCo freeze warning', 'alice')).toBe(false);
+  });
+});

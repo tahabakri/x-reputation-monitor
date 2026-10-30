@@ -109,7 +109,7 @@ export async function runMonitor(env: Env, deps: Deps = defaultDeps()): Promise<
       handled = p.id;
       continue;
     }
-    if (isPromoNoise(p.text)) {
+    if (isPromoNoise(p.text, p.username)) {
       summary.promoDropped++;
       handled = p.id;
       continue;
